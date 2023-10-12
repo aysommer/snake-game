@@ -23,9 +23,11 @@ const GAME_MODES = {
 };
 
 const RENDER_MS = 60;
-const MOVE_SPEED_MS = 500;
+const MOVE_SPEED_MS = 250;
 const SHIFT_SIZE = 5;
 const SNAKE_BLOCK_SIZE = 5;
+const APPLE_BLOCK_SIZE = SNAKE_BLOCK_SIZE;
+const SNAKE_SIZE = 4;
 
 class InputController {
    actions = {};
@@ -68,7 +70,6 @@ class InputController {
 
 class GameController {
    gameMode = GAME_MODES.IDLE;
-   direction = ACTIONS.LEFT;
 
    constructor() {
       this.canvas = document.getElementById('canvas');
@@ -93,10 +94,6 @@ class GameController {
             }
          }
       });
-      this.position = {
-         x: this.canvas.clientWidth / 2,
-         y: this.canvas.clientHeight / 2
-      };
    }
 
    render = () => {
@@ -105,11 +102,24 @@ class GameController {
    }
 
    draw = () => {
+      // Snake.
+      this.context.fillStyle = "green";
+      this.snake.forEach((block) => {
+         this.context.fillRect(
+            block.x,
+            block.y,
+            SNAKE_BLOCK_SIZE,
+            SNAKE_BLOCK_SIZE
+         );
+      });
+
+      // Apple.
+      this.context.fillStyle = "red";
       this.context.fillRect(
-         this.position.x,
-         this.position.y,
-         SNAKE_BLOCK_SIZE,
-         SNAKE_BLOCK_SIZE
+         this.apple.x,
+         this.apple.y,
+         APPLE_BLOCK_SIZE,
+         APPLE_BLOCK_SIZE
       );
    }
 
@@ -118,16 +128,54 @@ class GameController {
    }
 
    move = () => {
-      switch (this.direction) {
-         case ACTIONS.UP: this.position.y -= SHIFT_SIZE; break;
-         case ACTIONS.LEFT: this.position.x -= SHIFT_SIZE; break;
-         case ACTIONS.DOWN: this.position.y += SHIFT_SIZE; break;
-         case ACTIONS.RIGHT: this.position.x += SHIFT_SIZE; break;
+      this.checkCollision();
+
+      let pastBlock;
+
+      this.snake.forEach((block, index) => {
+         if (index === 0) {
+            // Head logic.
+            pastBlock = { ...block };
+            switch (this.direction) {
+               case ACTIONS.UP: this.snake[index].y -= SHIFT_SIZE; break;
+               case ACTIONS.LEFT: this.snake[index].x -= SHIFT_SIZE; break;
+               case ACTIONS.DOWN: this.snake[index].y += SHIFT_SIZE; break;
+               case ACTIONS.RIGHT: this.snake[index].x += SHIFT_SIZE; break;
+            }
+         } else {
+            // Body logic
+            this.snake[index] = pastBlock;
+            pastBlock = { ...block };
+         }
+      });
+   }
+
+   checkCollision = () => {
+      if (this.canEatApple()) {
+         this.apple = this.getApple();
+         this.increaseSnake();
       }
    }
 
+   canEatApple = () => {
+      return (
+         this.apple.x === this.snake[0].x &&
+         this.apple.y === this.snake[0].y
+      )
+   }
+
+   increaseSnake = () => {
+      const lastBlock = { ...this.snake[this.snake.length - 1] };
+      // setTimeout(() => {
+         this.snake.push(lastBlock);
+      // }, MOVE_SPEED_MS);
+   }
+
    start = () => {
+      this.snake = this.getDefaultSnake();
+      this.apple = this.getApple();
       this.gameMode = GAME_MODES.PLAYING;
+      this.direction = ACTIONS.LEFT;
       this.gameModeButton.innerText = 'Stop';
       this.renderInterval = setInterval(this.render, RENDER_MS);
       this.moveInterval = setInterval(this.move, MOVE_SPEED_MS);
@@ -142,6 +190,46 @@ class GameController {
       this.clear();
       clearInterval(this.renderInterval);
       clearInterval(this.moveInterval);
+   }
+
+   getApple = () => {
+      let isValidPos = false;
+      let randomApple;
+
+      while (!isValidPos) {
+         randomApple = {
+            x: this.getRandomInt(this.canvas.clientWidth),
+            y: this.getRandomInt(this.canvas.clientHeight)
+         };
+         const isMultiplePos = (
+            randomApple.x % APPLE_BLOCK_SIZE === 0 &&
+            randomApple.y % APPLE_BLOCK_SIZE === 0
+         );
+         if (isMultiplePos) {
+            isValidPos = !this.snake.some((block) => {
+               return (
+                  block.x === randomApple.x &&
+                  block.y === randomApple.y
+               )
+            })
+         }
+      }
+
+      return randomApple;
+   }
+
+   getDefaultSnake = () => {
+      return new Array(SNAKE_SIZE).fill(null).map((_, index) => {
+         return {
+            x: this.canvas.clientWidth / 2 + (SNAKE_BLOCK_SIZE * index),
+            y: this.canvas.clientHeight / 2
+         }
+      })
+   }
+
+   getRandomInt = (max) => {
+      max = Math.floor(max);
+      return Math.floor(Math.random() * (max - 0) + 0);
    }
 
    handleGameModeButtonClick = () => {
