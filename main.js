@@ -166,9 +166,7 @@ class GameController {
 
    increaseSnake = () => {
       const lastBlock = { ...this.snake[this.snake.length - 1] };
-      // setTimeout(() => {
-         this.snake.push(lastBlock);
-      // }, MOVE_SPEED_MS);
+      this.snake.push(lastBlock);
    }
 
    start = () => {
