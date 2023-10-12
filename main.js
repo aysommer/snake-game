@@ -23,7 +23,7 @@ const GAME_MODES = {
 };
 
 const RENDER_MS = 60;
-const MOVE_SPEED_MS = 250;
+const MOVE_SPEED_MS = 50;
 const SHIFT_SIZE = 5;
 const SNAKE_BLOCK_SIZE = 5;
 const APPLE_BLOCK_SIZE = SNAKE_BLOCK_SIZE;
@@ -74,6 +74,7 @@ class GameController {
    constructor() {
       this.canvas = document.getElementById('canvas');
       this.context = this.canvas.getContext("2d");
+      this.scoreTitle = document.getElementById('scoreTitle');
       this.gameModeButton = document.getElementById('gameModeButton');
       this.gameModeButton.innerText = 'Start';
       gameModeButton.onclick = this.handleGameModeButtonClick;
@@ -81,16 +82,24 @@ class GameController {
       this.inputController = new InputController({
          actions: {
             [ACTIONS.UP]: () => {
-               this.direction = ACTIONS.UP
+               if (this.direction !== ACTIONS.DOWN) {
+                  this.direction = ACTIONS.UP;
+               }
             },
             [ACTIONS.LEFT]: () => {
-               this.direction = ACTIONS.LEFT
+               if (this.direction !== ACTIONS.RIGHT) {
+                  this.direction = ACTIONS.LEFT;
+               }
             },
             [ACTIONS.DOWN]: () => {
-               this.direction = ACTIONS.DOWN
+               if (this.direction !== ACTIONS.UP) {
+                  this.direction = ACTIONS.DOWN;
+               }
             },
             [ACTIONS.RIGHT]: () => {
-               this.direction = ACTIONS.RIGHT
+               if (this.direction !== ACTIONS.LEFT) {
+                  this.direction = ACTIONS.RIGHT;
+               }
             }
          }
       });
@@ -128,7 +137,10 @@ class GameController {
    }
 
    move = () => {
-      this.checkCollision();
+      this.checkPositiveCollision();
+      if (this.hasNegativeCollision) {
+         this.stop();
+      }
 
       let pastBlock;
 
@@ -150,19 +162,14 @@ class GameController {
       });
    }
 
-   checkCollision = () => {
-      if (this.canEatApple()) {
+   checkPositiveCollision = () => {
+      if (this.canEatApple) {
          this.apple = this.getApple();
          this.increaseSnake();
+         this.scoreTitle.innerText = `Score: ${this.snake.length - SNAKE_SIZE}`;
       }
    }
 
-   canEatApple = () => {
-      return (
-         this.apple.x === this.snake[0].x &&
-         this.apple.y === this.snake[0].y
-      )
-   }
 
    increaseSnake = () => {
       const lastBlock = { ...this.snake[this.snake.length - 1] };
@@ -175,6 +182,7 @@ class GameController {
       this.gameMode = GAME_MODES.PLAYING;
       this.direction = ACTIONS.LEFT;
       this.gameModeButton.innerText = 'Stop';
+      this.scoreTitle.innerText = 'Score: 0';
       this.renderInterval = setInterval(this.render, RENDER_MS);
       this.moveInterval = setInterval(this.move, MOVE_SPEED_MS);
       this.inputController.enable();
@@ -184,6 +192,7 @@ class GameController {
    stop = () => {
       this.gameMode = GAME_MODES.IDLE;
       this.gameModeButton.innerText = 'Start';
+      this.scoreTitle.innerText = '';
       this.inputController.disable();
       this.clear();
       clearInterval(this.renderInterval);
@@ -236,6 +245,41 @@ class GameController {
          [GAME_MODES.PLAYING]: this.stop
       }[this.gameMode];
       callback();
+   }
+
+   get hasNegativeCollision() {
+      const [head, ...body] = this.snake;
+
+      // Walls
+      if (
+         head.x < 0 ||
+         head.x > this.canvas.clientWidth ||
+         head.y < 0 ||
+         head.y > this.canvas.clientHeight
+      ) {
+         return true;
+      }
+
+      // Self
+      if (body.some((block) => {
+         return (
+            head.x === block.x &&
+            head.y === block.y
+         )
+      })) {
+         return true;
+      }
+
+      return false;
+   }
+
+   get canEatApple() {
+      const head = this.snake[0];
+
+      return (
+         this.apple.x === head.x &&
+         this.apple.y === head.y
+      )
    }
 }
 
