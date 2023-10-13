@@ -77,7 +77,7 @@ class GameController {
       this.scoreTitle = document.getElementById('scoreTitle');
       this.gameModeButton = document.getElementById('gameModeButton');
       this.gameModeButton.innerText = 'Start';
-      gameModeButton.onclick = this.handleGameModeButtonClick;
+      this.gameModeButton.onclick = this.handleGameModeButtonClick;
 
       this.inputController = new InputController({
          actions: {
@@ -274,7 +274,7 @@ class GameController {
    }
 
    get canEatApple() {
-      const head = this.snake[0];
+      const [head] = this.snake;
 
       return (
          this.apple.x === head.x &&
