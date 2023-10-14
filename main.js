@@ -23,11 +23,13 @@ const GAME_MODES = {
 };
 
 const RENDER_MS = 60;
-const MOVE_SPEED_MS = 50;
-const SHIFT_SIZE = 5;
-const SNAKE_BLOCK_SIZE = 5;
+const MOVE_SPEED_MS = 100;
+const SHIFT_SIZE = 10;
+const SNAKE_BLOCK_SIZE = SHIFT_SIZE;
 const APPLE_BLOCK_SIZE = SNAKE_BLOCK_SIZE;
+const APPLE_COLOR = 'red';
 const SNAKE_SIZE = 4;
+const SNAKE_COLOR = 'mediumslateblue';
 
 class InputController {
    actions = {};
@@ -75,6 +77,7 @@ class GameController {
       this.canvas = document.getElementById('canvas');
       this.context = this.canvas.getContext("2d");
       this.scoreTitle = document.getElementById('scoreTitle');
+      this.scoreTitle.innerText = 'Press start';
       this.gameModeButton = document.getElementById('gameModeButton');
       this.gameModeButton.innerText = 'Start';
       this.gameModeButton.onclick = this.handleGameModeButtonClick;
@@ -112,7 +115,7 @@ class GameController {
 
    draw = () => {
       // Snake.
-      this.context.fillStyle = "green";
+      this.context.fillStyle = SNAKE_COLOR;
       this.snake.forEach((block) => {
          this.context.fillRect(
             block.x,
@@ -123,7 +126,7 @@ class GameController {
       });
 
       // Apple.
-      this.context.fillStyle = "red";
+      this.context.fillStyle = APPLE_COLOR;
       this.context.fillRect(
          this.apple.x,
          this.apple.y,
@@ -192,7 +195,7 @@ class GameController {
    stop = () => {
       this.gameMode = GAME_MODES.IDLE;
       this.gameModeButton.innerText = 'Start';
-      this.scoreTitle.innerText = '';
+      this.scoreTitle.innerText = 'Press start';
       this.inputController.disable();
       this.clear();
       clearInterval(this.renderInterval);
