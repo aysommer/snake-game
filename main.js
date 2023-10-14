@@ -114,6 +114,15 @@ class GameController {
    }
 
    draw = () => {
+      // Apple.
+      this.context.fillStyle = APPLE_COLOR;
+      this.context.fillRect(
+         this.apple.x,
+         this.apple.y,
+         APPLE_BLOCK_SIZE,
+         APPLE_BLOCK_SIZE
+      );
+
       // Snake.
       this.context.fillStyle = SNAKE_COLOR;
       this.snake.forEach((block) => {
@@ -124,15 +133,6 @@ class GameController {
             SNAKE_BLOCK_SIZE
          );
       });
-
-      // Apple.
-      this.context.fillStyle = APPLE_COLOR;
-      this.context.fillRect(
-         this.apple.x,
-         this.apple.y,
-         APPLE_BLOCK_SIZE,
-         APPLE_BLOCK_SIZE
-      );
    }
 
    clear = () => {
